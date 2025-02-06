@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Auth Service
+  auth-service:
+    build:
+      context: ./backend/auth-service
+    container_name: auth-service
+    environment:
+      - DB_URL=postgres://user:password@auth-db:5432/auth_service  # Cambiado auth-db por localhost
+    ports:
+      - "3001:3000"
+    depends_on:
+      - auth-db
+    networks:
+      - app-network
+
+  # Product Service
+  product-service:
+    build:
+      context: ./backend/product-service
+    container_name: product-service
+    volumes:
+      - ./uploads:/app/uploads  # Monta la carpeta "uploads" dentro del contenedor
+    environment:
+      - DB_URL=postgres://user:password@product-db:5432/product_service  # Cambiado product-db por localhost
+    ports:
+      - "3002:3000"
+    depends_on:
+      - product-db
+    networks:
+      - app-network
+
+  # PostgreSQL for Auth Service
+  auth-db:
+    image: postgres:13
+    container_name: auth-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: auth_service
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    ports:
+      - "5432:5432"  # Exponiendo el puerto 5432 al host
+
+  # PostgreSQL for Product Service
+  product-db:
+    image: postgres:13
+    container_name: product-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: product_service
+    volumes:
+      - product-db-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    ports:
+      - "5433:5432"  # Exponiendo el puerto 5433 al host (puedes elegir otro puerto si deseas evitar conflicto)
+
+  # Frontend React App (con Vite)
+  frontend:
+    build:
+      context: ./frontend/
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    networks:
+      - app-network
+    environment:
+      - VITE_HOST=0.0.0.0  # Configuramos Vite para que escuche en todas las interfaces de red
+    command: npm run dev -- --host  # Aseguramos que Vite se ejecute con el comando correcto
+
+volumes:
+  auth-db-data:
+  product-db-data:
+
+networks:
+  app-network:
+    driver: bridge

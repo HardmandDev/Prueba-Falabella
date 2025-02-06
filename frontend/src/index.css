@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.container {
+  max-width: 1200px; /* Puedes cambiar este valor según tus necesidades */
+  margin: 0 auto;    /* Centra el contenedor */
+  padding: 50px;     /* Espaciado interno para que el contenido no toque los bordes */
+}
